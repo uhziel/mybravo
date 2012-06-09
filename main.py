@@ -6,9 +6,11 @@ from construct import LengthValueAdapter, StringAdapter, Sequence
 from construct import UBInt16
 from construct import Struct, MetaField
 
+STATE_UNAUTHENTICATED, STATE_CHALLENGED = range(2)
+
 class DoubleAdapter(LengthValueAdapter):
 
-    def _encode(self, obj):
+    def _encode(self, obj, context):
         return len(obj) / 2, obj
 
 def BetaString(name):
@@ -22,20 +24,25 @@ def BetaString(name):
             encoding="utf_16_be",
             )
 
-def handshake(payload):
+def handshake(protocol, payload):
     parser = Struct('handshake',
             BetaString('username_and_host')
             )
-
     container = parser.parse(payload)
-
     print 'handshake: username_and host is %s' % container.username_and_host
+
+    protocol.state = STATE_CHALLENGED
+    container.username_and_host = u'-'
+    protocol.transport.write(parser.build(container))
 
 packets = {
     2: handshake,
 }
 
 class BetaProtocol(Protocol):
+
+    def __init__(self):
+        self.state = STATE_UNAUTHENTICATED
 
     def dataReceived(self, data):
         packet_id = ord(data[0])
@@ -45,7 +52,7 @@ class BetaProtocol(Protocol):
 
         if packet_id in packets:
             handler = packets[packet_id]
-            handler(payload)
+            handler(self, payload)
 
 class BetaFactory(Factory):
 

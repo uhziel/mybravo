@@ -33,7 +33,7 @@ def handshake(protocol, payload):
 
     protocol.state = STATE_CHALLENGED
     container.username_and_host = u'-'
-    protocol.transport.write(parser.build(container))
+    protocol.transport.write('\x02' + parser.build(container))
 
 packets = {
     2: handshake,

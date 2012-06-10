@@ -6,6 +6,8 @@ from construct import LengthValueAdapter, StringAdapter, Sequence
 from construct import UBInt16, SBInt32, SBInt8, UBInt8
 from construct import Struct, MetaField, Container
 
+from collections import defaultdict
+
 STATE_UNAUTHENTICATED, STATE_CHALLENGED = range(2)
 
 class DoubleAdapter(LengthValueAdapter):
@@ -46,6 +48,7 @@ parsers = {
         'handshake',
         BetaString('username_and_host')
     ),
+    0xFE: Struct('server_list_ping'),
 }
 
 
@@ -58,7 +61,7 @@ class BetaProtocol(Protocol):
         packet_id = ord(data[0])
         payload = data[1:]
 
-        if packet_id in parsers and packet_id in self.handlers:
+        if packet_id in parsers:
             container = parsers[packet_id].parse(payload)
             self.handlers[packet_id](self, container)
         else:
@@ -83,10 +86,15 @@ class BetaProtocol(Protocol):
         self.state = STATE_CHALLENGED
         self.transport.write(make_packet(0x02, username_and_host=u'-'))
 
-    handlers = {
+    def unhandled(self, container):
+        print 'unhandled but parseable packet found!'
+        print container
+
+    handlers = defaultdict(lambda : BetaProtocol.unhandled)
+    handlers.update({
         0x01: login,
         0x02: handshake,
-    }
+    })
 
 
 class BetaFactory(Factory):

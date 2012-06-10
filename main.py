@@ -24,19 +24,22 @@ def BetaString(name):
             encoding="utf_16_be",
             )
 
-def handshake(protocol, payload):
-    parser = Struct('handshake',
-            BetaString('username_and_host')
-            )
-    container = parser.parse(payload)
+def handshake(protocol, container):
     print 'handshake: username_and host is %s' % container.username_and_host
 
     protocol.state = STATE_CHALLENGED
     container.username_and_host = u'-'
-    protocol.transport.write('\x02' + parser.build(container))
+    protocol.transport.write('\x02' + parsers[0x02].build(container))
 
-packets = {
-    2: handshake,
+parsers = {
+    0x02: Struct(
+        'handshake',
+        BetaString('username_and_host')
+        )
+}
+
+handlers = {
+    0x02: handshake,
 }
 
 class BetaProtocol(Protocol):
@@ -47,12 +50,12 @@ class BetaProtocol(Protocol):
     def dataReceived(self, data):
         packet_id = ord(data[0])
         payload = data[1:]
-        print '::::packet_id =', packet_id
-        print '::::payload =', repr(payload)
 
-        if packet_id in packets:
-            handler = packets[packet_id]
-            handler(self, payload)
+        if packet_id in parsers and packet_id in handlers:
+            container = parsers[packet_id].parse(payload)
+            handlers[packet_id](self, container)
+        else:
+            print 'unknown packet (%d, %s)' % (packet_id, repr(payload))
 
 class BetaFactory(Factory):
 

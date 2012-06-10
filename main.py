@@ -4,7 +4,7 @@ from twisted.internet.protocol import Factory, Protocol
 
 from construct import LengthValueAdapter, StringAdapter, Sequence
 from construct import UBInt16, SBInt32, SBInt8, UBInt8
-from construct import Struct, MetaField
+from construct import Struct, MetaField, Container
 
 STATE_UNAUTHENTICATED, STATE_CHALLENGED = range(2)
 
@@ -25,6 +25,10 @@ def BetaString(name):
         encoding="utf_16_be",
     )
 
+
+def make_packet(packet_id, **kwargs):
+    payload = parsers[packet_id].build(Container(**kwargs))
+    return chr(packet_id) + payload
 
 parsers = {
     0x01: Struct(
@@ -67,7 +71,7 @@ class BetaProtocol(Protocol):
         )
 
         if container.protocol_version < 29:
-            self.trasnport.write('\xff')
+            self.trasnport.write(make_packet(0xFF))
 
         self.transport.write('\x01' + '\x00' * 8)
 
@@ -77,8 +81,7 @@ class BetaProtocol(Protocol):
         )
 
         self.state = STATE_CHALLENGED
-        container.username_and_host = u'-'
-        self.transport.write('\x02' + parsers[0x02].build(container))
+        self.transport.write(make_packet(0x02, username_and_host=u'-'))
 
     handlers = {
         0x01: login,

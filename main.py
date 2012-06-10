@@ -65,6 +65,7 @@ class BetaProtocol(Protocol):
         if packet_id in parsers:
             container = parsers[packet_id].parse(payload)
             if packet_id in self.handlers:
+                print 'packet (0x{:02X}, {}).'.format(packet_id, container)
                 self.handlers[packet_id](self, container)
             else:
                 print 'packet (0x{:02X}, {}) have no handler.'.format(
@@ -76,11 +77,6 @@ class BetaProtocol(Protocol):
             )
 
     def login_request(self, container):
-        print 'login_request: protocol version is {}, username is {}'.format(
-            container.protocol_version,
-            container.username,
-        )
-
         if container.protocol_version < 29:
             self.transport.write(
                 make_packet(0xFF, reason='your version is old.')
@@ -91,10 +87,6 @@ class BetaProtocol(Protocol):
         self.transport.write('\x01' + '\x00' * 8)
 
     def handshake(self, container):
-        print 'handshake: username_and_host is {}'.format(
-            container.username_and_host
-        )
-
         self.state = STATE_CHALLENGED
         self.transport.write(make_packet(0x02, username_and_host=u'-'))
 

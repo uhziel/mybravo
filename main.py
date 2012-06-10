@@ -34,7 +34,7 @@ def make_packet(packet_id, **kwargs):
 
 parsers = {
     0x01: Struct(
-        'login',
+        'login_request',
         SBInt32('protocol_version'),
         BetaString('username'),
         BetaString('not_used1'),
@@ -67,8 +67,8 @@ class BetaProtocol(Protocol):
         else:
             print 'unknown packet (0x{:02X}, {})'.format(packet_id, repr(payload))
 
-    def login(self, container):
-        print 'login: protocol version is {}, username is {}'.format(
+    def login_request(self, container):
+        print 'login_request: protocol version is {}, username is {}'.format(
             container.protocol_version,
             container.username,
         )
@@ -92,7 +92,7 @@ class BetaProtocol(Protocol):
 
     handlers = defaultdict(lambda : BetaProtocol.unhandled)
     handlers.update({
-        0x01: login,
+        0x01: login_request,
         0x02: handshake,
     })
 

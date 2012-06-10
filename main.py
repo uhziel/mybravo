@@ -64,9 +64,16 @@ class BetaProtocol(Protocol):
 
         if packet_id in parsers:
             container = parsers[packet_id].parse(payload)
-            self.handlers[packet_id](self, container)
+            if packet_id in self.handlers:
+                self.handlers[packet_id](self, container)
+            else:
+                print 'packet (0x{:02X}, {}) have no handler.'.format(
+                    packet_id, container
+                )
         else:
-            print 'unknown packet (0x{:02X}, {})'.format(packet_id, repr(payload))
+            print 'unknown packet (0x{:02X}, {})'.format(
+                packet_id, repr(payload)
+            )
 
     def login_request(self, container):
         print 'login_request: protocol version is {}, username is {}'.format(
@@ -91,15 +98,10 @@ class BetaProtocol(Protocol):
         self.state = STATE_CHALLENGED
         self.transport.write(make_packet(0x02, username_and_host=u'-'))
 
-    def unhandled(self, container):
-        print 'unhandled but parseable packet found!'
-        print container
-
-    handlers = defaultdict(lambda : BetaProtocol.unhandled)
-    handlers.update({
+    handlers = {
         0x01: login_request,
         0x02: handshake,
-    })
+    }
 
 
 class BetaFactory(Factory):

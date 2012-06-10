@@ -33,7 +33,7 @@ def make_packet(packet_id, **kwargs):
     return chr(packet_id) + payload
 
 parsers = {
-    0x01: Struct( 'login_request',
+    0x01: Struct('login_request',
         SBInt32('protocol_version'),
         BetaString('username'),
         BetaString('not_used1'),
@@ -43,7 +43,7 @@ parsers = {
         UBInt8('not_used5'),
         UBInt8('not_used6'),
     ),
-    0x02: Struct( 'handshake',
+    0x02: Struct('handshake',
         BetaString('username_and_host')
     ),
     0xFE: Struct('server_list_ping'),

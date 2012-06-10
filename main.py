@@ -44,10 +44,12 @@ class BetaProtocol(Protocol):
             container = parsers[packet_id].parse(payload)
             self.handlers[packet_id](self, container)
         else:
-            print 'unknown packet (%d, %s)' % (packet_id, repr(payload))
+            print 'unknown packet (0x{:02X}, {})'.format(packet_id, repr(payload))
 
     def handshake(self, container):
-        print 'handshake: username_and host is %s' % container.username_and_host
+        print 'handshake: username_and host is {}'.format(
+                container.username_and_host
+        )
 
         self.state = STATE_CHALLENGED
         container.username_and_host = u'-'

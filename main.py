@@ -13,23 +13,26 @@ class DoubleAdapter(LengthValueAdapter):
     def _encode(self, obj, context):
         return len(obj) / 2, obj
 
+
 def BetaString(name):
     return StringAdapter(
-            DoubleAdapter(
-                Sequence(name,
-                    UBInt16("length"),
-                    MetaField("data", lambda ctx: ctx["length"] * 2),
-                    )
-                ),
-            encoding="utf_16_be",
+        DoubleAdapter(
+            Sequence(name,
+                UBInt16("length"),
+                MetaField("data", lambda ctx: ctx["length"] * 2),
             )
+        ),
+        encoding="utf_16_be",
+    )
+
 
 parsers = {
     0x02: Struct(
         'handshake',
         BetaString('username_and_host')
-        )
+    ),
 }
+
 
 class BetaProtocol(Protocol):
 
@@ -48,7 +51,7 @@ class BetaProtocol(Protocol):
 
     def handshake(self, container):
         print 'handshake: username_and host is {}'.format(
-                container.username_and_host
+            container.username_and_host
         )
 
         self.state = STATE_CHALLENGED
@@ -63,6 +66,7 @@ class BetaProtocol(Protocol):
 class BetaFactory(Factory):
 
     protocol = BetaProtocol
+
 
 reactor.listenTCP(25565, BetaFactory())
 reactor.run()

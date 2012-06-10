@@ -90,9 +90,15 @@ class BetaProtocol(Protocol):
         self.state = STATE_CHALLENGED
         self.transport.write(make_packet(0x02, username_and_host=u'-'))
 
+    def server_list_ping(self, container):
+        delimiter = u'\u00A7'
+        server_info = delimiter.join([u'zhulei|1.2.5|China', u'1000', u'1000'])
+        self.transport.write(make_packet(0xFF, reason=server_info))
+
     handlers = {
         0x01: login_request,
         0x02: handshake,
+        0xFE: server_list_ping,
     }
 
 

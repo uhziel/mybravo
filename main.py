@@ -76,7 +76,7 @@ class BetaProtocol(Protocol):
         self.transport.write('\x01' + '\x00' * 8)
 
     def handshake(self, container):
-        print 'handshake: username_and host is {}'.format(
+        print 'handshake: username_and_host is {}'.format(
             container.username_and_host
         )
 
